@@ -10,11 +10,18 @@ require("./model/index");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+
+// folder access garna deko ejs file haru lai
+//public vitra ko folder access garna payo aba 
+
+app.use(express.static("./public")); 
+
 //setting up ejs, telling nodejs to use ejs
 app.set("view engine", "ejs");
 
 
 // Request(req)/Response(res) cycle
+// Home Page
 app.get("/", async (req, res) => {
   const allBlogs = await blogs.findAll();
   res.render('home' ,{blogs: allBlogs});              //passing value to home.ejs
@@ -45,10 +52,40 @@ app.get("/singleBlog/:id", async (req, res) => {   //    /singleBlog/:id le sing
 app.get("/deleteBlog/:id",async (req, res) =>{
 
   const id = req.params.id;
-  await blogs.destroy({ where: { id } });
+  await blogs.destroy({ where: { id } });  // delete garna destroy function use garnu parxa
 
   res.redirect('/');
 })
+
+//EDIT BLOG UI(PAGE)
+app.get("/editBlog/:id", async (req, res) => {
+  const id = req.params.id;
+    // finding single blog to prefill in input
+    const allBlogs = await blogs.findAll({
+      where: {
+        id,
+      },
+    });
+
+    // allBlogs(single Blog) pass gareko editBlog.ejs file ma prefill ko lagi
+  res.render("editBlog", { id: id,allBlogs:allBlogs });
+});
+
+//EDIT BLOG POST
+app.post("/editBlog/:id", async (req, res) => {
+  const id = req.params.id;
+
+  // update
+  // form bata(req.body) bata aako kura haru(title,description,subtitle) lai update gardey where id ko value chae tyo parameter bata aako id ko value xa 
+  await blogs.update(req.body, {
+    where: {
+      id: id,
+    },
+  });
+  // update vayisakeypaxi direct to singleBlog page of that specific id
+  res.redirect("/singleBlog/" + id);
+});
+
 
 
 
